@@ -49,12 +49,12 @@ export default function DashboardLayout({
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
+            "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:h-screen",
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <div className="flex flex-col h-full pt-16 md:pt-0">
-            <nav className="flex-1 px-4 py-6 space-y-2">
+          <div className="flex flex-col h-screen pt-16 md:pt-0">
+            <nav className="flex-1 px-4 py-6 space-y-2 h-full">
               {sidebarItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href

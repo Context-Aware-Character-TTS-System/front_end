@@ -11,7 +11,7 @@ export function AudioPlayer() {
   const [currentTrack] = useState("해리포터와 마법사의 돌 - 1장")
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-50">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4">
           {/* Track Info */}
