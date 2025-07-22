@@ -31,7 +31,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">회원가입</CardTitle>
-          <CardDescription className="text-center">새 계정을 만들어 TTS 스튜디오를 시작하세요</CardDescription>
+          <CardDescription className="text-center">새 계정을 만들어 Alone을 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">

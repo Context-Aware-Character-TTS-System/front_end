@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Home, BookOpen, Upload, Settings, Menu, User } from "lucide-react"
+import { Home, Upload, Settings, Menu, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -13,7 +13,6 @@ import { AudioPlayer } from "@/components/audio-player"
 
 const sidebarItems = [
   { href: "/dashboard", label: "홈", icon: Home },
-  { href: "/dashboard/novels", label: "내 소설", icon: BookOpen },
   { href: "/dashboard/upload", label: "업로드", icon: Upload },
   { href: "/dashboard/settings", label: "설정", icon: Settings },
 ]
@@ -35,7 +34,7 @@ export default function DashboardLayout({
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-bold text-blue-600">TTS 스튜디오</h1>
+            <h1 className="text-xl font-bold text-blue-600">Alone</h1>
           </div>
           <Avatar>
             <AvatarImage src="/placeholder.svg?height=32&width=32" />
