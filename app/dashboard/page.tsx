@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Eye, Play, Trash2, Calendar } from "lucide-react"
+import { Eye, Play, Trash2, Calendar } from 'lucide-react'
 import { NovelModal } from "@/components/novel-modal"
+import { useAudio } from "@/contexts/audio-context"
 
 const novels = [
   {
@@ -36,9 +37,14 @@ const novels = [
 
 export default function DashboardPage() {
   const [selectedNovel, setSelectedNovel] = useState<(typeof novels)[0] | null>(null)
+  const { showPlayer } = useAudio()
 
   const getStatusColor = (status: string) => {
     return status === "완료됨" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+  }
+
+  const handlePlayAll = (novel: typeof novels[0]) => {
+    showPlayer(novel)
   }
 
   return (
@@ -67,7 +73,12 @@ export default function DashboardPage() {
                   <Eye className="h-4 w-4 mr-1" />
                   보기
                 </Button>
-                <Button variant="outline" size="sm" disabled={novel.status === "처리 중"}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={novel.status === "처리 중"}
+                  onClick={() => handlePlayAll(novel)}
+                >
                   <Play className="h-4 w-4 mr-1" />
                   전체 듣기
                 </Button>
