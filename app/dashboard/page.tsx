@@ -1,50 +1,90 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Eye, Play, Trash2, Calendar } from 'lucide-react'
+import { Eye, Play, Trash2, Calendar, Loader2 } from 'lucide-react'
 import { NovelModal } from "@/components/novel-modal"
-import { useAudio } from "@/contexts/audio-context"
+import api from "@/lib/api"
 
-const novels = [
-  {
-    id: 1,
-    title: "해리포터와 마법사의 돌",
-    uploadDate: "2024-01-15",
-    status: "완료됨",
-    content:
-      "해리 포터는 11살이 되던 해에 자신이 마법사라는 사실을 알게 되었다. 그는 호그와트 마법학교에 입학하게 되었고, 그곳에서 론 위즐리와 헤르미온느 그레인저라는 친구들을 만났다.",
-  },
-  {
-    id: 2,
-    title: "어린왕자",
-    uploadDate: "2024-01-10",
-    status: "처리 중",
-    content:
-      "어느 날 나는 사하라 사막에서 비행기 고장으로 불시착했다. 그때 한 어린 소년을 만났는데, 그는 자신을 어린왕자라고 소개했다.",
-  },
-  {
-    id: 3,
-    title: "1984",
-    uploadDate: "2024-01-08",
-    status: "완료됨",
-    content:
-      "1984년 4월의 밝고 차가운 날이었다. 시계가 열세 시를 알리고 있었다. 윈스턴 스미스는 턱을 가슴에 파묻고 매서운 바람을 피하려 애쓰며 빅토리 맨션의 유리문 사이로 재빨리 몸을 밀어넣었다.",
-  },
-]
+interface Novel {
+  id: string;
+  title: string;
+  created_at: string;
+  status: 'done' | 'processing' | 'pending' | 'error';
+  content?: string;
+}
 
 export default function DashboardPage() {
-  const [selectedNovel, setSelectedNovel] = useState<(typeof novels)[0] | null>(null)
-  const { showPlayer } = useAudio()
+  const [novels, setNovels] = useState<Novel[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedNovel, setSelectedNovel] = useState<Novel | null>(null)
+  const router = useRouter()
 
-  const getStatusColor = (status: string) => {
-    return status === "완료됨" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      router.push("/")
+      return
+    }
+
+    const fetchNovels = async () => {
+      try {
+        // SRS: GET /api/novels returns data: Novel[]
+        const response = await api<Novel[]>("/api/novels")
+        setNovels(response)
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred");
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchNovels()
+  }, [router])
+
+  const getStatusText = (status: Novel['status']) => {
+    const statusMap = {
+      done: "완료됨",
+      processing: "처리 중",
+      pending: "대기 중",
+      error: "오류",
+    }
+    return statusMap[status]
   }
 
-  const handlePlayAll = (novel: typeof novels[0]) => {
-    showPlayer(novel)
+  const getStatusColor = (status: Novel['status']) => {
+    const colorMap = {
+      done: "bg-green-100 text-green-800",
+      processing: "bg-yellow-100 text-yellow-800",
+      pending: "bg-blue-100 text-blue-800",
+      error: "bg-red-100 text-red-800",
+    }
+    return colorMap[status]
+  }
+
+  const handlePlayAll = () => {
+    alert("전체 듣기 기능은 구현 예정입니다.")
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <p className="ml-2">소설 목록을 불러오는 중...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500">{error}</div>
   }
 
   return (
@@ -60,24 +100,24 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <CardTitle className="text-lg line-clamp-2">{novel.title}</CardTitle>
-                <Badge className={getStatusColor(novel.status)}>{novel.status}</Badge>
+                <Badge className={getStatusColor(novel.status)}>{getStatusText(novel.status)}</Badge>
               </div>
               <div className="flex items-center gap-1 text-sm text-gray-500">
                 <Calendar className="h-4 w-4" />
-                {novel.uploadDate}
+                {new Date(novel.created_at).toLocaleDateString()}
               </div>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedNovel(novel)}>
+                <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/novels/${novel.id}`)}>
                   <Eye className="h-4 w-4 mr-1" />
                   보기
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  disabled={novel.status === "처리 중"}
-                  onClick={() => handlePlayAll(novel)}
+                  disabled={novel.status !== "done"}
+                  onClick={() => handlePlayAll()}
                 >
                   <Play className="h-4 w-4 mr-1" />
                   전체 듣기

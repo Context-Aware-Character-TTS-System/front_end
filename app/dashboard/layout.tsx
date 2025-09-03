@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { LogOut } from 'lucide-react'
 import { useRouter } from "next/navigation"
 import { AudioProvider, useAudio } from "@/contexts/audio-context"
+import api from "@/lib/api"
 
 const sidebarItems = [
   { href: "/dashboard", label: "홈", icon: Home },
@@ -58,7 +59,22 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuItem onClick={() => router.push("/")}>
+              <DropdownMenuItem
+                onClick={async () => {
+                  try {
+                    await api("/auth/logout", { method: "POST" })
+                  } catch (e) {
+                    // Best-effort logout; ignore errors
+                  } finally {
+                    try {
+                      localStorage.removeItem("accessToken")
+                    } catch (e) {
+                      // ignore storage errors
+                    }
+                    router.push("/")
+                  }
+                }}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>로그아웃</span>
               </DropdownMenuItem>

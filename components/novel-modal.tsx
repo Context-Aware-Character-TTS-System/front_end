@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Play, ChevronLeft, ChevronRight, BookOpen } from "lucide-react"
 
 interface Novel {
-  id: number
+  id: string
   title: string
-  content: string
+  content?: string
 }
 
 interface NovelModalProps {

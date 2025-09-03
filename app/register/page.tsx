@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,21 +8,42 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import api from "@/lib/api" // API aßßƒi 추가
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (password !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다.")
+      setError("비밀번호가 일치하지 않습니다.")
       return
     }
-    // Simulate registration
-    router.push("/dashboard")
+    
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await api("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      })
+      alert("회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.")
+      router.push("/") // 로그인 페이지로 변경
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -34,6 +54,7 @@ export default function RegisterPage() {
           <CardDescription className="text-center">새 계정을 만들어 Alone을 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
+          {error && <div className="mb-4 text-center text-red-500">{error}</div>}
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">이메일</Label>
@@ -44,6 +65,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -55,6 +77,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -66,10 +89,11 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              회원가입
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "가입하는 중..." : "회원가입"}
             </Button>
           </form>
           <div className="mt-4 text-center">

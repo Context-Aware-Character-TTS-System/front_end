@@ -5,19 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
-import { Upload, FileText, X } from "lucide-react"
+import { Upload, FileText, X, AlertTriangle } from "lucide-react"
 import { useDropzone } from "react-dropzone"
+import { useRouter } from "next/navigation"
+import api from "@/lib/api"
 
 export default function UploadPage() {
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [title, setTitle] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
     if (file && file.type === "text/plain") {
       setUploadedFile(file)
+      // 파일 이름에서 확장자를 제외하고 제목으로 설정
+      setTitle(file.name.replace(/\.txt$/, ""))
     }
   }, [])
 
@@ -29,29 +34,43 @@ export default function UploadPage() {
     multiple: false,
   })
 
-  const handleUpload = () => {
-    if (!uploadedFile) return
+  const handleUpload = async () => {
+    if (!uploadedFile || !title) {
+      setError("파일과 제목을 모두 입력해주세요.")
+      return
+    }
 
     setIsUploading(true)
-    setUploadProgress(0)
+    setError(null)
 
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setIsUploading(false)
-          return 100
-        }
-        return prev + 10
+    const formData = new FormData()
+    // SRS: file field should be `file` (not `textfile`)
+    formData.append("file", uploadedFile)
+    formData.append("title", title)
+    
+    try {
+      await api("/novels", {
+        method: "POST",
+        body: formData,
       })
-    }, 200)
+      alert("업로드가 완료되었습니다. 대시보드에서 처리 상태를 확인하세요.")
+      router.push("/dashboard")
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const removeFile = () => {
     setUploadedFile(null)
-    setUploadProgress(0)
+    setTitle("")
     setIsUploading(false)
+    setError(null)
   }
 
   return (
@@ -66,6 +85,13 @@ export default function UploadPage() {
           <CardTitle>파일 업로드</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {error && (
+            <div className="flex items-center gap-2 text-red-500 bg-red-50 p-3 rounded-md">
+              <AlertTriangle className="h-5 w-5" />
+              <span>{error}</span>
+            </div>
+          )}
+
           {!uploadedFile ? (
             <div
               {...getRootProps()}
@@ -78,7 +104,7 @@ export default function UploadPage() {
               <p className="text-lg font-medium text-gray-700 mb-2">
                 {isDragActive ? "파일을 여기에 놓으세요" : "파일을 드래그하거나 클릭하여 업로드"}
               </p>
-              <p className="text-sm text-gray-500">.txt 파일만 지원됩니다 (최대 10MB)</p>
+              <p className="text-sm text-gray-500">.txt 파일만 지원됩니다</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -95,26 +121,20 @@ export default function UploadPage() {
                 </Button>
               </div>
 
-              {isUploading && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>업로드 중...</span>
-                    <span>{uploadProgress}%</span>
-                  </div>
-                  <Progress value={uploadProgress} />
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">소설 제목</Label>
-                  <Input id="title" placeholder="소설 제목을 입력하세요" disabled={isUploading} />
-                </div>
-
-                <Button onClick={handleUpload} disabled={isUploading || uploadProgress === 100} className="w-full">
-                  {isUploading ? "업로드 중..." : uploadProgress === 100 ? "업로드 완료" : "업로드 시작"}
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="title">소설 제목</Label>
+                <Input 
+                  id="title" 
+                  placeholder="소설 제목을 입력하세요" 
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={isUploading} 
+                />
               </div>
+
+              <Button onClick={handleUpload} disabled={isUploading} className="w-full">
+                {isUploading ? "업로드 중..." : "업로드 시작"}
+              </Button>
             </div>
           )}
         </CardContent>
